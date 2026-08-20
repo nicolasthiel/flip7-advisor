@@ -29,8 +29,11 @@ python CLI.py
 
 ### Commands
 `m <cards>` adds one or more cards to your line \
+`md <cards>` moves one or more cards from your line to the discard pile \
+`td <cards>` moves one or more cards from the table's line to the discard pile \
 `t <cards>` adds one or more cards to the table's line \
 `c` calculates $P_{\text{bust}}$​, $P_{\text{safe}}$​, and $EV$ given the current lines \
+`d` displays your line, the table line and the discard pile \
 `r` resets table for a new round \
 `q` exits
 
