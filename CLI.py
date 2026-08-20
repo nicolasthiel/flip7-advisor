@@ -9,13 +9,15 @@ class CLIController:
     def __init__(self):
         self.calculator = Flip7Calculator()
 
+
     def _parse_card(self, token):
         if token.isdigit():
             return int(token)
-        elif token in ['+2', '+4', '+6', '+8', '+10', 'x2']:
+        elif token in ['+2', '+4', '+6', '+8', '+10', 'x2', 'frz', 'f3', '2c']:
             return token
         else:
             raise ValueError(f"Invalid card: {token}")
+
         
     def _display_stats(self, stats):
         if stats.get("deck_empty"):
@@ -29,11 +31,15 @@ class CLIController:
         print(f"Expected Score EV:  {stats["ev"]:.1f}")
         print("="*30 + "\n")
 
+
     def run(self):
         print("Commands:")
         print("  m <cards>   -> Add to YOUR line (e.g., 'm 12 5 +2 x2')")
-        print("  t <cards>   -> Add to TABLE / discards (e.g., 't 11 11 0 +4 x2')")
+        print("  md <card>   -> Remove a card from YOUR line to the discard pile (e.g., 'md 2c')")
+        print("  t <cards>   -> Add to TABLE line (e.g., 't 11 11 0 +4 x2')")
+        print("  mt <cards>  -> Remove a card from TABLE to the discard pile (e.g., 'mt 2c')")
         print("  c           -> Calculate Expected Value & Probabilities")
+        print("  d           -> Display current state")
         print("  r           -> Reset for a new round")
         print("  q           -> Quit\n")
 
@@ -59,7 +65,23 @@ class CLIController:
                     for arg in args:
                         card = self._parse_card(arg)
                         if card is not None and card in INITIAL_DECK_COUNTS:
-                            self.calculator.add_to_my_line(card)
+                            if card in ["frz", "f3"]:
+                                self.calculator.add_to_discard_pile(card)
+                            else:
+                                self.calculator.add_to_my_line(card)
+                        else:
+                            print(f"[!] Invalid card ignored: {arg}")
+                    print(f"My Line: {self.calculator.my_line}")
+
+                elif cmd == 'md':
+                    for arg in args:
+                        card = self._parse_card(arg)
+                        if card is not None:
+                            try:
+                                self.calculator.remove_from_my_line(card)
+                                self.calculator.add_to_discard_pile(card)
+                            except ValueError as e:
+                                print(f"[!] {e}")
                         else:
                             print(f"[!] Invalid card ignored: {arg}")
                     print(f"My Line: {self.calculator.my_line}")
@@ -73,9 +95,27 @@ class CLIController:
                             print(f"[!] Invalid card ignored: {arg}")
                     print(f"Table Cards: {self.calculator.table_line}")
 
+                elif cmd == 'td':
+                    for arg in args:
+                        card = self._parse_card(arg)
+                        if card is not None:
+                            try:
+                                self.calculator.remove_from_table_line(card)
+                                self.calculator.add_to_discard_pile(card)
+                            except ValueError as e:
+                                print(f"[!] {e}")
+                        else:
+                            print(f"[!] Invalid card ignored: {arg}")
+                    print(f"Table Cards: {self.calculator.table_line}")
+
                 elif cmd == 'c' or cmd == 'calc':
                     stats = self.calculator.calculate_stats()
                     self._display_stats(stats)
+
+                elif cmd == 'd' or cmd == 'display':
+                    print(f"My Line: {self.calculator.my_line}")
+                    print(f"Table Cards: {self.calculator.table_line}")
+                    print(f"Discard Pile: {self.calculator.discard_pile}")
 
                 else:
                     print("[!] Unknown command. Use m, t, c, r, or q.")
