@@ -13,7 +13,7 @@ class CLIController:
     def _parse_card(self, token):
         if token.isdigit():
             return int(token)
-        elif token in ['+2', '+4', '+6', '+8', '+10', 'x2', 'frz', 'f3', '2c']:
+        elif token in ['+2', '+4', '+6', '+8', '+10', 'x2', 'fz', 'f3', 'sc']:
             return token
         else:
             raise ValueError(f"Invalid card: {token}")
@@ -35,9 +35,9 @@ class CLIController:
     def run(self):
         print("Commands:")
         print("  m <cards>   -> Add to YOUR line (e.g., 'm 12 5 +2 x2')")
-        print("  md <card>   -> Remove a card from YOUR line to the discard pile (e.g., 'md 2c')")
+        print("  md <card>   -> Remove a card from YOUR line to the discard pile (e.g., 'md sc')")
         print("  t <cards>   -> Add to TABLE line (e.g., 't 11 11 0 +4 x2')")
-        print("  mt <cards>  -> Remove a card from TABLE to the discard pile (e.g., 'mt 2c')")
+        print("  mt <cards>  -> Remove a card from TABLE to the discard pile (e.g., 'mt sc')")
         print("  c           -> Calculate Expected Value & Probabilities")
         print("  d           -> Display current state")
         print("  r           -> Reset for a new round")
@@ -65,7 +65,7 @@ class CLIController:
                     for arg in args:
                         card = self._parse_card(arg)
                         if card is not None and card in INITIAL_DECK_COUNTS:
-                            if card in ["frz", "f3"]:
+                            if card in ["fz", "f3"]:
                                 self.calculator.add_to_discard_pile(card)
                             else:
                                 self.calculator.add_to_my_line(card)

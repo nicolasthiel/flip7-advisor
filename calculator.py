@@ -21,9 +21,9 @@ INITIAL_DECK_COUNTS = {
     '+8': 1,
     '+10': 1,
     'x2': 1,
-    'frz': 3,
+    'fz': 3,
     'f3': 3,
-    '2c': 3
+    'sc': 3
 }
 
 
@@ -102,7 +102,7 @@ class Flip7Calculator:
             }
         number_cards = set([card for card in self.my_line if isinstance(card, int)])
         bust_cards_left = sum(remaining_deck.get(num, 0) for num in number_cards)
-        p_bust = 0.0 if '2c' in self.my_line else bust_cards_left / n_total
+        p_bust = 0.0 if 'sc' in self.my_line else bust_cards_left / n_total
         p_safe = 1.0 - p_bust
 
         # calculate Expected Value (EV)
@@ -113,7 +113,7 @@ class Flip7Calculator:
                 
             p_draw = count / n_total
             
-            if isinstance(card, int) and card in number_cards and '2c' not in self.my_line:
+            if isinstance(card, int) and card in number_cards and 'sc' not in self.my_line:
                 expected_new_score += (p_draw * 0) 
             else:
                 simulated_line = self.my_line + [card]
