@@ -29,10 +29,11 @@ INITIAL_DECK_COUNTS = {
 
 class Flip7Calculator:
 
-    def __init__(self):
+    def __init__(self, deck_counts=None):
         self.my_line = []
         self.table_line = []
         self.discard_pile = []
+        self.deck_counts = copy.deepcopy(deck_counts) if deck_counts is not None else copy.deepcopy(INITIAL_DECK_COUNTS)
 
 
     def reset_round(self):
@@ -89,7 +90,7 @@ class Flip7Calculator:
 
         # identify visible cards and remaining deck
         visible_cards = self.my_line + self.table_line + self.discard_pile
-        remaining_deck = copy.deepcopy(INITIAL_DECK_COUNTS)
+        remaining_deck = copy.deepcopy(self.deck_counts)
         for card in visible_cards:
             if card in remaining_deck and remaining_deck[card] > 0:
                 remaining_deck[card] -= 1
