@@ -1,22 +1,58 @@
+import argparse
+import json
+import os
 import sys
-import copy
+from typing import TypedDict
 
-from calculator import Flip7Calculator, INITIAL_DECK_COUNTS
+from calculator import Flip7Calculator
+
+
+DEFAULT_DECK_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "deck_configs/base.json")
+
+
+DeckConfigJSON = TypedDict(
+    "DeckConfigJSON",
+    {
+        "12": int,
+        "11": int,
+        "10": int,
+        "9": int,
+        "8": int,
+        "7": int,
+        "6": int,
+        "5": int,
+        "4": int,
+        "3": int,
+        "2": int,
+        "1": int,
+        "0": int,
+        "+2": int,
+        "+4": int,
+        "+6": int,
+        "+8": int,
+        "+10": int,
+        "x2": int,
+        "fz": int,
+        "f3": int,
+        "sc": int,
+    },
+)
 
 
 class CLIController:
 
-    def __init__(self):
-        self.calculator = Flip7Calculator()
+    def __init__(self, deck_counts=None):
+        self.calculator = Flip7Calculator(deck_counts=deck_counts)
+        self.valid_cards = set(self.calculator.deck_counts.keys())
 
 
     def _parse_card(self, token):
         if token.isdigit():
             return int(token)
-        elif token in ['+2', '+4', '+6', '+8', '+10', 'x2', 'fz', 'f3', 'sc']:
+        elif token in self.valid_cards:
             return token
         else:
-            raise ValueError(f"Invalid card: {token}")
+            return None
 
         
     def _display_stats(self, stats):
@@ -64,7 +100,7 @@ class CLIController:
                 elif cmd == 'm':
                     for arg in args:
                         card = self._parse_card(arg)
-                        if card is not None and card in INITIAL_DECK_COUNTS:
+                        if card is not None and card in self.valid_cards:
                             if card in ["fz", "f3"]:
                                 self.calculator.add_to_discard_pile(card)
                             else:
@@ -89,7 +125,7 @@ class CLIController:
                 elif cmd == 't':
                     for arg in args:
                         card = self._parse_card(arg)
-                        if card is not None and card in INITIAL_DECK_COUNTS:
+                        if card is not None and card in self.valid_cards:
                             self.calculator.add_to_table_line(card)
                         else:
                             print(f"[!] Invalid card ignored: {arg}")
@@ -118,7 +154,7 @@ class CLIController:
                     print(f"Discard Pile: {self.calculator.discard_pile}")
 
                 else:
-                    print("[!] Unknown command. Use m, t, c, r, or q.")
+                    print("[!] Unknown command. Use m, t, c, r, or q.") # TODO replace with valid command list
 
             except KeyboardInterrupt:
                 print("\nExiting...")
@@ -127,6 +163,82 @@ class CLIController:
                 print(f"[!] Error: {e}")
 
 
+def _deck_key_to_json_key(card):
+    return str(card) if isinstance(card, int) else card
+
+
+def _json_key_to_deck_key(card_key):
+    return int(card_key) if card_key.isdigit() else card_key
+
+
+def _normalize_and_validate_deck_config(raw_config):
+    if not isinstance(raw_config, dict):
+        raise ValueError("Deck config must be a JSON object mapping card keys to counts.")
+
+    expected_keys = set(DeckConfigJSON.__required_keys__)
+    provided_lookup = {str(key): value for key, value in raw_config.items()}
+    provided_keys = set(provided_lookup.keys())
+
+    missing_keys = sorted(expected_keys - provided_keys)
+    extra_keys = sorted(provided_keys - expected_keys)
+
+    if missing_keys or extra_keys:
+        error_parts = []
+        if missing_keys:
+            error_parts.append(f"missing keys: {', '.join(missing_keys)}")
+        if extra_keys:
+            error_parts.append(f"unknown keys: {', '.join(extra_keys)}")
+        raise ValueError("Invalid deck keys; " + "; ".join(error_parts) + ".")
+
+    normalized_config = {}
+    for key in sorted(expected_keys, key=lambda value: (not value.isdigit(), int(value) if value.isdigit() else value)):
+        count = provided_lookup[key]
+        if isinstance(count, bool) or not isinstance(count, int):
+            raise ValueError(f"Count for '{key}' must be an integer.")
+        if count < 0:
+            raise ValueError(f"Count for '{key}' must be >= 0.")
+        normalized_config[_json_key_to_deck_key(key)] = count
+
+    if sum(normalized_config.values()) == 0:
+        raise ValueError("Deck config cannot have all counts set to 0.")
+
+    return normalized_config
+
+
+def load_deck_config(config_path):
+    expanded_path = os.path.abspath(os.path.expanduser(config_path))
+    try:
+        with open(expanded_path, "r", encoding="utf-8") as file_handle:
+            raw_config = json.load(file_handle)
+    except FileNotFoundError as exc:
+        raise ValueError(f"Deck config file not found: {expanded_path}") from exc
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Deck config is not valid JSON: {exc}") from exc
+    except OSError as exc:
+        raise ValueError(f"Could not read deck config file: {exc}") from exc
+
+    return _normalize_and_validate_deck_config(raw_config)
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Flip7 Advisor CLI")
+    parser.add_argument(
+        "--deck-config",
+        dest="deck_config",
+        default=DEFAULT_DECK_CONFIG_PATH,
+        help="Path to a JSON file that defines initial deck counts.",
+    )
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    cli = CLIController()
+    args = parse_args()
+    try:
+        custom_deck_counts = load_deck_config(args.deck_config)
+        print(f"[✓] Loaded deck config from {os.path.abspath(os.path.expanduser(args.deck_config))}")
+    except ValueError as error:
+        print(f"[!] Failed to load deck config: {error}")
+        sys.exit(1)
+
+    cli = CLIController(deck_counts=custom_deck_counts)
     cli.run()
