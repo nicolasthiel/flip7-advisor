@@ -27,6 +27,15 @@ cd flip7-advisor
 python main.py
 ```
 
+Running `python main.py` starts the game and automatically loads the default deck config from `deck_configs/base.json`.
+
+### Run With A Custom Deck Config
+```bash
+python main.py --deck-config path/to/your-config.json
+```
+
+The config file must contain all supported card keys with integer counts.
+
 ### Commands
 `m <cards>` adds one or more cards to your line \
 `md <cards>` moves one or more cards from your line to the discard pile \
