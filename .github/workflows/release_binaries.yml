@@ -1,0 +1,62 @@
+name: Build and Upload Release Binaries
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            os_name: linux
+            executable_name: flip7-advisor
+          - os: macos-latest
+            os_name: macos
+            executable_name: flip7-advisor
+          - os: windows-latest
+            os_name: windows
+            executable_name: flip7-advisor.exe
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+
+      - name: Install PyInstaller
+        run: pip install pyinstaller
+
+      - name: Build with PyInstaller
+        shell: bash
+        run: |
+          # Set the separator: semicolon for Windows, colon for Linux/macOS
+          SEP=":"
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            SEP=";"
+          fi
+
+          # Bundle the entire deck_configs folder into the binary
+          pyinstaller --onefile \
+            --name ${{ matrix.executable_name }} \
+            --add-data "deck_configs${SEP}deck_configs" \
+            main.py
+
+      - name: Rename executable for release
+        shell: bash
+        run: |
+          mv dist/${{ matrix.executable_name }} dist/flip7-advisor-${{ matrix.os_name }}
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            mv dist/flip7-advisor-${{ matrix.os_name }} dist/flip7-advisor-${{ matrix.os_name }}.exe
+          fi
+
+      - name: Upload Binary to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/flip7-advisor-*
