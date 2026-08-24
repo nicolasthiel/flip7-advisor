@@ -1,39 +1,44 @@
 import copy
 
+from typing import TypedDict
 
-INITIAL_DECK_COUNTS = {
-    12: 12,
-    11: 11,
-    10: 10,
-    9: 9,
-    8: 8,
-    7: 7, 
-    6: 6,
-    5: 5,
-    4: 4,
-    3: 3,
-    2: 2,
-    1: 1,
-    0: 1,
-    '+2': 1,
-    '+4': 1,
-    '+6': 1,
-    '+8': 1,
-    '+10': 1,
-    'x2': 1,
-    'fz': 3,
-    'f3': 3,
-    'sc': 3
-}
+
+DeckConfigJSON = TypedDict(
+    "DeckConfigJSON",
+    {
+        "12": int,
+        "11": int,
+        "10": int,
+        "9": int,
+        "8": int,
+        "7": int,
+        "6": int,
+        "5": int,
+        "4": int,
+        "3": int,
+        "2": int,
+        "1": int,
+        "0": int,
+        "+2": int,
+        "+4": int,
+        "+6": int,
+        "+8": int,
+        "+10": int,
+        "x2": int,
+        "fz": int,
+        "f3": int,
+        "sc": int,
+    },
+)
 
 
 class Flip7Calculator:
 
-    def __init__(self, deck_counts=None):
+    def __init__(self, deck_counts: DeckConfigJSON):
         self.my_line = []
         self.table_line = []
         self.discard_pile = []
-        self.deck_counts = copy.deepcopy(deck_counts) if deck_counts is not None else copy.deepcopy(INITIAL_DECK_COUNTS)
+        self.deck_counts = copy.deepcopy(deck_counts)
 
 
     def reset_round(self):

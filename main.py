@@ -2,46 +2,13 @@ import argparse
 import json
 import os
 import sys
-from typing import TypedDict
 
-from calculator import Flip7Calculator
-
-
-DEFAULT_DECK_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "deck_configs/base.json")
-
-
-DeckConfigJSON = TypedDict(
-    "DeckConfigJSON",
-    {
-        "12": int,
-        "11": int,
-        "10": int,
-        "9": int,
-        "8": int,
-        "7": int,
-        "6": int,
-        "5": int,
-        "4": int,
-        "3": int,
-        "2": int,
-        "1": int,
-        "0": int,
-        "+2": int,
-        "+4": int,
-        "+6": int,
-        "+8": int,
-        "+10": int,
-        "x2": int,
-        "fz": int,
-        "f3": int,
-        "sc": int,
-    },
-)
+from calculator import Flip7Calculator, DeckConfigJSON
 
 
 class CLIController:
 
-    def __init__(self, deck_counts=None):
+    def __init__(self, deck_counts: DeckConfigJSON):
         self.calculator = Flip7Calculator(deck_counts=deck_counts)
         self.valid_cards = set(self.calculator.deck_counts.keys())
 
@@ -220,6 +187,20 @@ def load_deck_config(config_path):
     return _normalize_and_validate_deck_config(raw_config)
 
 
+def get_resource_path(relative_path):
+    """Get the absolute path to a resource, works for dev and for PyInstaller."""
+    try:
+        # PyInstaller creates a temp folder and stores its path in sys._MEIPASS
+        base_path = sys._MEIPASS
+    except AttributeError:
+        # If sys._MEIPASS doesn't exist, we are running as a normal Python script
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+
+DEFAULT_DECK_CONFIG_PATH = get_resource_path("deck_configs/base.json")
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Flip7 Advisor CLI")
     parser.add_argument(
@@ -239,6 +220,6 @@ if __name__ == "__main__":
     except ValueError as error:
         print(f"[!] Failed to load deck config: {error}")
         sys.exit(1)
-
+    print(type(custom_deck_counts))
     cli = CLIController(deck_counts=custom_deck_counts)
     cli.run()
