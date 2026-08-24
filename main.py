@@ -121,7 +121,7 @@ class CLIController:
                     print(f"Discard Pile: {self.calculator.discard_pile}")
 
                 else:
-                    print("[!] Unknown command. Use m, t, c, r, or q.") # TODO replace with valid command list
+                    print("[!] Unknown command. Use m, md, t, td, c, d, r, or q.")
 
             except KeyboardInterrupt:
                 print("\nExiting...")
