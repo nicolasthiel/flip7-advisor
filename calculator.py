@@ -1,68 +1,101 @@
 import copy
 
+from typing import TypedDict
 
-INITIAL_DECK_COUNTS = {
-    12: 12,
-    11: 11,
-    10: 10,
-    9: 9,
-    8: 8,
-    7: 7, 
-    6: 6,
-    5: 5,
-    4: 4,
-    3: 3,
-    2: 2,
-    1: 1,
-    0: 1,
-    '+2': 1,
-    '+4': 1,
-    '+6': 1,
-    '+8': 1,
-    '+10': 1,
-    'x2': 1
-}
+
+DeckConfigJSON = TypedDict(
+    "DeckConfigJSON",
+    {
+        "12": int,
+        "11": int,
+        "10": int,
+        "9": int,
+        "8": int,
+        "7": int,
+        "6": int,
+        "5": int,
+        "4": int,
+        "3": int,
+        "2": int,
+        "1": int,
+        "0": int,
+        "+2": int,
+        "+4": int,
+        "+6": int,
+        "+8": int,
+        "+10": int,
+        "x2": int,
+        "fz": int,
+        "f3": int,
+        "sc": int,
+    },
+)
 
 
 class Flip7Calculator:
 
-    def __init__(self):
+    def __init__(self, deck_counts: DeckConfigJSON):
         self.my_line = []
         self.table_line = []
+        self.discard_pile = []
+        self.deck_counts = copy.deepcopy(deck_counts)
 
 
     def reset_round(self):
         self.my_line = []
         self.table_line = []
+        self.discard_pile = []
 
 
     def add_to_my_line(self, card):
         self.my_line.append(card)
 
 
+    def remove_from_my_line(self, card):
+        if card in self.my_line:
+            self.my_line.remove(card)
+        else:
+            raise ValueError(f"Card {card} not found in your line.")
+
+        
+    def remove_from_table_line(self, card):
+        if card in self.table_line:
+            self.table_line.remove(card)
+        else:
+            raise ValueError(f"Card {card} not found in table line.")
+
+
     def add_to_table_line(self, card):
         self.table_line.append(card)
 
 
+    def add_to_discard_pile(self, card):
+        self.discard_pile.append(card)
+
+
     def _calculate_score(self, line):
         number_line = [c for c in line if isinstance(c, int)]
-        if len(set(number_line)) == len(number_line):
-            number_sum = sum(number_line)
+        
+        number_sum = sum(number_line)
 
-            if 'x2' in line:
-                number_sum *= 2 # apply x2 multiplier if present
+        if 'x2' in line:
+            number_sum *= 2 # apply x2 multiplier if present
 
-            bonus_sum = sum([int(c[1:]) for c in line if isinstance(c, str) and c.startswith('+')]) # add all the bonus cards if present
+        bonus_sum = sum([int(c[1:]) for c in line if isinstance(c, str) and c.startswith('+')]) # add all the bonus cards if present
+        score = number_sum + bonus_sum
 
-            return number_sum + bonus_sum
-        return 0
-    
-    
+        # apply Flip7 bonus if there are 7 number cards
+        if len(number_line) >= 7:
+            score += 15
+
+        return score
+        
+
     def calculate_stats(self):
 
         # identify visible cards and remaining deck
-        visible_cards = self.my_line + self.table_line
-        remaining_deck = copy.deepcopy(INITIAL_DECK_COUNTS)
+        visible_cards = self.my_line + self.table_line + self.discard_pile
+        remaining_deck = copy.deepcopy(self.deck_counts)
         for card in visible_cards:
             if card in remaining_deck and remaining_deck[card] > 0:
                 remaining_deck[card] -= 1
@@ -75,7 +108,7 @@ class Flip7Calculator:
             }
         number_cards = set([card for card in self.my_line if isinstance(card, int)])
         bust_cards_left = sum(remaining_deck.get(num, 0) for num in number_cards)
-        p_bust = bust_cards_left / n_total
+        p_bust = 0.0 if 'sc' in self.my_line else bust_cards_left / n_total
         p_safe = 1.0 - p_bust
 
         # calculate Expected Value (EV)
@@ -86,22 +119,15 @@ class Flip7Calculator:
                 
             p_draw = count / n_total
             
-            if isinstance(card, int) and card in number_cards:
+            if isinstance(card, int) and card in number_cards and 'sc' not in self.my_line:
                 expected_new_score += (p_draw * 0) 
             else:
                 simulated_line = self.my_line + [card]
                 simulated_score = self._calculate_score(simulated_line)
-                
-                sim_unique = set([card for card in simulated_line if isinstance(card, int)])
-                if len(sim_unique) == 7:
-                    simulated_score += 15
-                    
                 expected_new_score += (p_draw * simulated_score)
 
         # calculate current score
-        current_score = self._calculate_score(self.my_line)
-        if len(number_cards) >= 7:
-            current_score += 15
+        current_score = self._calculate_score(self.my_line)   
 
         return {
             "deck_empty": False,

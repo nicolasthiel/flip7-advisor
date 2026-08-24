@@ -24,13 +24,25 @@ _Flip7 Advisor_ tracks visible table cards to deduce the remaining deck composit
 ```bash
 git clone https://github.com/nicolasthiel/flip7-advisor.git
 cd flip7-advisor
-python CLI.py
+python main.py
 ```
+
+Running `python main.py` starts the game and automatically loads the default deck config from `deck_configs/base.json`.
+
+### Run With A Custom Deck Config
+```bash
+python main.py --deck-config path/to/your-config.json
+```
+
+The config file must contain all supported card keys with integer counts.
 
 ### Commands
 `m <cards>` adds one or more cards to your line \
+`md <cards>` moves one or more cards from your line to the discard pile \
+`td <cards>` moves one or more cards from the table's line to the discard pile \
 `t <cards>` adds one or more cards to the table's line \
 `c` calculates $P_{\text{bust}}$​, $P_{\text{safe}}$​, and $EV$ given the current lines \
+`d` displays your line, the table line and the discard pile \
 `r` resets table for a new round \
 `q` exits
 
@@ -44,12 +56,12 @@ Flip7> c
 
 ==============================
 Current Score:      12
-Risk of Busting:    11.2%
-Chance of Safe Hit: 88.8%
-Expected Score EV:  17.3
+Risk of Busting:    10.1%
+Chance of Safe Hit: 89.9%
+Expected Score EV:  16.8
 ==============================
 
-Flip7> t 0 1 6    
+Flip7> t 0 1 6
 Table Cards: [12, 12, 8, 4, 0, 1, 6]
 Flip7> m 4
 My Line: [12, 4]
@@ -57,8 +69,8 @@ Flip7> c
 
 ==============================
 Current Score:      16
-Risk of Busting:    14.5%
-Chance of Safe Hit: 85.5%
-Expected Score EV:  20.5
+Risk of Busting:    12.9%
+Chance of Safe Hit: 87.1%
+Expected Score EV:  20.1
 ==============================
 ```
