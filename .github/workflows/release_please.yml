@@ -13,8 +13,6 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: google-github-actions/release-please-action@v4
+      - uses: googleapis/release-please-action@v4
         with:
-          # 'simple' tells it to just manage tags and a CHANGELOG.md 
-          # without trying to modify a setup.py or package.json
           release-type: simple
