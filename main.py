@@ -2,8 +2,10 @@ import argparse
 import json
 import os
 import sys
+from typing import get_type_hints
 
-from calculator import Flip7Calculator, DeckConfigJSON
+from calculator import Flip7Calculator
+from schema import DeckConfigJSON
 
 
 class CLIController:
@@ -130,19 +132,26 @@ class CLIController:
                 print(f"[!] Error: {e}")
 
 
-def _deck_key_to_json_key(card):
-    return str(card) if isinstance(card, int) else card
-
-
 def _json_key_to_deck_key(card_key):
     return int(card_key) if card_key.isdigit() else card_key
+
+
+def _get_typed_dict_hints(typed_dict_cls):
+    try:
+        return get_type_hints(typed_dict_cls)
+    except Exception:
+        return getattr(typed_dict_cls, "__annotations__", {})
 
 
 def _normalize_and_validate_deck_config(raw_config):
     if not isinstance(raw_config, dict):
         raise ValueError("Deck config must be a JSON object mapping card keys to counts.")
 
-    expected_keys = set(DeckConfigJSON.__required_keys__)
+    expected_types = _get_typed_dict_hints(DeckConfigJSON)
+    expected_keys = set(expected_types.keys())
+    if not expected_keys:
+        raise ValueError("Deck config schema is unavailable.")
+
     provided_lookup = {str(key): value for key, value in raw_config.items()}
     provided_keys = set(provided_lookup.keys())
 
@@ -160,8 +169,11 @@ def _normalize_and_validate_deck_config(raw_config):
     normalized_config = {}
     for key in sorted(expected_keys, key=lambda value: (not value.isdigit(), int(value) if value.isdigit() else value)):
         count = provided_lookup[key]
-        if isinstance(count, bool) or not isinstance(count, int):
+        expected_type = expected_types.get(key, int)
+        if expected_type is int and (isinstance(count, bool) or not isinstance(count, int)):
             raise ValueError(f"Count for '{key}' must be an integer.")
+        if expected_type is not int and not isinstance(count, expected_type):
+            raise ValueError(f"Count for '{key}' must be of type {expected_type.__name__}.")
         if count < 0:
             raise ValueError(f"Count for '{key}' must be >= 0.")
         normalized_config[_json_key_to_deck_key(key)] = count
@@ -220,6 +232,5 @@ if __name__ == "__main__":
     except ValueError as error:
         print(f"[!] Failed to load deck config: {error}")
         sys.exit(1)
-    print(type(custom_deck_counts))
     cli = CLIController(deck_counts=custom_deck_counts)
     cli.run()
