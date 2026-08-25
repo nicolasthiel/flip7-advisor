@@ -42,7 +42,7 @@ class CLIController:
         print("  m <cards>   -> Add to YOUR line (e.g., 'm 12 5 +2 x2')")
         print("  md <card>   -> Remove a card from YOUR line to the discard pile (e.g., 'md sc')")
         print("  t <cards>   -> Add to TABLE line (e.g., 't 11 11 0 +4 x2')")
-        print("  mt <cards>  -> Remove a card from TABLE to the discard pile (e.g., 'mt sc')")
+        print("  td <cards>  -> Remove a card from TABLE to the discard pile (e.g., 'td sc')")
         print("  c           -> Calculate Expected Value & Probabilities")
         print("  d           -> Display current state")
         print("  r           -> Reset for a new round")
