@@ -36,6 +36,18 @@ python main.py --deck-config path/to/your-config.json
 
 The config file must contain all supported card keys with integer counts.
 
+### Command Logging
+
+Each time the CLI is executed, a new logging file named by datetime (e.g. `logs/20261007_122430.jsonl`) is created in JSON Lines format in the `logs/` directory. Logging is file-only and best-effort, so it does not add output to the CLI or prevent the program from running if the log file cannot be written.
+
+Use `--log-file` to choose a custom location:
+
+```bash
+python main.py --log-file path/to/flip7-advisor.jsonl
+```
+
+Each record includes the raw and normalized command, command outcome, player/table/discard lines, configured and remaining deck counts, and calculation results when applicable. The log is intended for local troubleshooting and records the card commands entered during the session.
+
 ### Commands
 `m <cards>` adds one or more cards to your line \
 `md <cards>` moves one or more cards from your line to the discard pile \
