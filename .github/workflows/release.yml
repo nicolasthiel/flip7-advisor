@@ -3,7 +3,7 @@ name: Release and Build Binaries
 on:
   push:
     branches:
-      - main # or your default branch
+      - main
 
 permissions:
   contents: write
@@ -13,7 +13,9 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     outputs:
+      # These outputs must be explicitly mapped so the build job can use them
       release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
@@ -76,6 +78,5 @@ jobs:
       - name: Upload Binary to Release
         uses: softprops/action-gh-release@v2
         with:
-          # Use the tag name output directly from release-please
           tag_name: ${{ needs.release-please.outputs.tag_name }}
           files: dist/flip7-advisor-*
