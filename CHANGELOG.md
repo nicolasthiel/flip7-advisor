@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/nicolasthiel/flip7-advisor/compare/v1.1.0...v1.1.1) (2026-10-08)
+
+
+### Bug Fixes
+
+* **release workflow:** add empty commit to add release binaries using release workflow ([7acdc3f](https://github.com/nicolasthiel/flip7-advisor/commit/7acdc3f87a3c86b48b73e76018c1fd0d4240c668))
+
 ## [1.1.0](https://github.com/nicolasthiel/flip7-advisor/compare/v1.0.1...v1.1.0) (2026-10-08)
 
 
